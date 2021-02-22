@@ -1,115 +1,270 @@
-#include "mainwindow.h"
+
 #include <SFML/Graphics.hpp>
 #include <iostream>
-#include <QApplication>
+#include <iomanip>
+#include <vector>
+#include <cstdlib>
+#include <math.h>
+#include "SFML/Window.hpp"
 
 using namespace sf;
 using namespace std;
 
 
+
+class Shoot
+{
+public:
+    Sprite shape;
+
+    Shoot(Texture *text, Vector2f windowSize);
+
+};
+
+
+class Player
+{
+private:
+    int HP;
+    int HPmax;
+
+public:
+    Sprite shape;
+    Texture *text;
+    int take_damage();
+
+    Player(Texture *);
+    vector<Shoot> bullets;
+    //~Player();
+
+};
+
+class Enemy
+{
+private:
+    int HP;
+    int HPmax;
+
+public:
+    Sprite shape;
+    Enemy(Texture *texture,Vector2u pos);
+    int take_edamage( int a);
+    Enemy();
+
+};
+
+
+
+Player::Player(Texture *tex)
+{
+    this->HP = 10;
+    this->HPmax = HP;
+    this->text = tex;
+    this-> shape.setTexture(*tex);
+    this->shape.setScale(0.2f,0.2f);
+
+}
+
+
+
+Shoot::Shoot(Texture *tex, Vector2f poss)
+{
+    this->shape.setTexture(*tex);
+    this->shape.setScale(0.06f,0.06f);
+    this->shape.setPosition(poss);
+}
+
+Enemy::Enemy(Texture *text, Vector2u windowSize)
+{
+    this->HPmax = rand() % 3 + 1;
+    this->HP = this->HPmax;
+
+    this->shape.setTexture(*text);
+    this->shape.setScale(0.25f, 0.25f);
+    this->shape.setPosition(windowSize.x - this->shape.getGlobalBounds().width, rand() % (int)(windowSize.y - this->shape.getLocalBounds().height));
+    take_edamage(HP);
+}
+
+int Enemy::take_edamage(int a)
+{
+
+    a = HP;
+    a--;
+    return a;
+}
+
+
+
 int main(int argc, char *argv[])
 {
-    RenderWindow window(VideoMode(1080, 720),"TODO");
+    srand(time(NULL));
+
+    RenderWindow window(VideoMode(1080,800),"Spaceship Game!", Style::Default);
     window.setFramerateLimit(60);
 
-    //draw line for x
-    RectangleShape linex;
-    linex.setSize(Vector2f(window.getSize().x , 3.f));
-    linex.setPosition(window.getSize().x /4 - 268, window.getSize().y /5 - 10 );
-    linex.setFillColor(Color(128,128,128));
 
-    //draw line for y
-    RectangleShape liney;
-    liney.setSize(Vector2f(3.f, window.getSize().y + 100.f));
-    liney.setPosition(Vector2f(window.getSize().x /5 - 81.f, window.getSize().y /4 - 179.f));
-    liney.setFillColor(Color(128,128,128));
+    //init text
+    Font font;
+    font.loadFromFile("C:/Users/king/Music/Qt/5/5/B-NAZANIN.TTF");
 
-    //draw add icon
-    Texture add;
-    if(!add.loadFromFile("C:/Users/king/Music/Qt/5/5/image/add.png"))
-        throw "cant find add image!!";
-    Sprite spr;
-    spr.setTexture(add);
-    spr.setPosition(Vector2f(window.getSize().x - 80, window.getSize().y /2 + 258));
-    spr.setScale(0.5f, 0.5f);
+    //init picture
+    Texture playertext;
+    playertext.loadFromFile("C:/Users/king/Music/Qt/5/5/image/spship.png");
 
-    //draw delete icon
-    Texture del;
-    if(!del.loadFromFile("C:/Users/king/Music/Qt/5/5/image/delete.png"))
-        throw "cant find delete image!!";
-    Sprite delet;
-    delet.setTexture(del);
-    delet.setPosition(Vector2f(window.getSize().x /4 - 260, window.getSize().y /9 - 50));
-    delet.setScale(0.4f, 0.4f);
+    Texture enemytext;
+    enemytext.loadFromFile("C:/Users/king/Music/Qt/5/5/image/enemy.png");
 
-    //draw complete task icon
-    Texture complete;
-    if(!complete.loadFromFile("C:/Users/king/Music/Qt/5/5/image/complete.png"))
-        throw "cant find complete img!!";
-    Sprite comp;
-    comp.setTexture(complete);
-    comp.setPosition(Vector2f(window.getSize().x /4 - 195, window.getSize().y /9 - 50));
-    comp.setScale(0.4f, 0.4f);
+    Texture shoottext;
+    shoottext.loadFromFile("C:/Users/king/Music/Qt/5/5/image/misslie.png");
+
+    //inti palyer
+    Player pl(&playertext);
+    int shoot_time = 15;
+    Text hptext;
+    hptext.setFont(font);
+    hptext.setCharacterSize(14);
+    hptext.setFillColor(Color::White);
 
 
-    //draw favorite icon
-    Texture favorite;
-    if(!favorite.loadFromFile("C:/Users/king/Music/Qt/5/5/image/favorite.png"))
-        throw "cant find favorite image";
-    Sprite unf;
-    unf.setTexture(favorite);
-    unf.setPosition(Vector2f(window.getSize().x - 80 , window.getSize().y /4  - 150));
-    unf.setScale(Vector2f(0.4f, 0.4f));
-
-    //draw edit icon
-    Texture edit;
-    if(!edit.loadFromFile("C:/Users/king/Music/Qt/5/5/image/edit.png"))
-        throw "cant find edit image";
-    Sprite ed;
-    ed.setTexture(edit);
-    ed.setPosition(Vector2f(delet.getPosition().x, delet.getPosition().y + delet.getGlobalBounds().height));
-    ed.setScale(0.4f, 0.4f);
-    ed.setColor(Color(255, 51, 240));
-
-    // set background
-    Texture background;
-    if(!background.loadFromFile("C:/Users/king/Music/Qt/5/5/image/todo.png"))
-        throw "cant find background image!";
-    Sprite backg;
-    backg.setTexture(background);
-    backg.setPosition(Vector2f(window.getSize().x /20 - 52.5, window.getSize().y /20 - 35));
-    backg.setColor(Color(255,255, 255));
+    //enemy init
+    vector<Enemy> enemies;
+    int enemy_time = 0;
+    enemies.push_back(Enemy(&enemytext,window.getSize()));
+    Text ehptext;
+    ehptext.setFont(font);
+    ehptext.setCharacterSize(14);
+    ehptext.setFillColor(Color::White);
 
 
-
-    //loop program
     while (window.isOpen())
     {
-        Event evet;
-        while (window.pollEvent(evet))
+        Event event;
+        while (window.pollEvent(event))
         {
-            if(evet.type == Event::Closed)
+            if(event.type == Event::Closed)
                 window.close();
-            if(evet.type == Event::KeyPressed)
-                if(evet.key.code == Keyboard::Escape)
-                    window.close();
+            if(event.KeyPressed && event.key.code == Keyboard::Escape)
+                window.close();
         }
 
-        window.clear(Color::White);
-        window.draw(backg);
-        window.draw(spr);
-        window.draw(delet);
-        window.draw(comp);
-        window.draw(unf);
-        window.draw(ed);
-        window.draw(linex);
-        window.draw(liney);
 
+        //player update
+        if(Keyboard::isKeyPressed(Keyboard::W))
+                pl.shape.move(0.f, -10.f);
+        if(Keyboard::isKeyPressed(Keyboard::A))
+                pl.shape.move(-10.f, 0.f);
+        if(Keyboard::isKeyPressed(Keyboard::S))
+                pl.shape.move(0.f, 10.f);
+        if(Keyboard::isKeyPressed(Keyboard::D))
+                pl.shape.move(10.f, 0.f);
+
+        hptext.setPosition(pl.shape.getPosition().x, pl.shape.getPosition().y - hptext.getGlobalBounds().height);
+        //hptext.setString(to_string(pl.HP))
+        //collision with window
+        if(pl.shape.getPosition().x <= 0)   //left
+        {
+            pl.shape.setPosition(0.f, pl.shape.getPosition().y);
+        }
+        if(pl.shape.getPosition().x >= window.getSize().x - pl.shape.getGlobalBounds().width)    //right
+        {
+            pl.shape.setPosition( window.getSize().x - pl.shape.getGlobalBounds().width, pl.shape.getPosition().y);
+        }
+        if(pl.shape.getPosition().y <=0)    //top
+        {
+            pl.shape.setPosition(pl.shape.getPosition().x, 0.f);
+        }
+        if(pl.shape.getPosition().y >= window.getSize().y - pl.shape.getGlobalBounds().height)   //bottom
+        {
+            pl.shape.setPosition(pl.shape.getPosition().x, window.getSize().y - pl.shape.getGlobalBounds().height);
+        }
+
+
+        //update contorol
+        if(shoot_time < 15)
+        {
+            shoot_time++;
+        }
+
+        if(Mouse::isButtonPressed(Mouse::Left) && shoot_time >= 15)     //shooting
+        {
+            pl.bullets.push_back(Shoot(&shoottext, pl.shape.getPosition()));
+            shoot_time = 0;
+        }
+
+        //bullets
+        for(size_t i=0; i<pl.bullets.size(); i++)
+        {
+            //move bullets
+            pl.bullets[i].shape.move(20.f, 0.f);
+            //out of window
+            if(pl.bullets[i].shape.getPosition().x > window.getSize().x)
+            {
+                pl.bullets.erase(pl.bullets.begin() + i);
+                break;
+            }
+            //enemy collision
+            for(size_t j =0; j< enemies.size(); j++)
+            {
+                if(pl.bullets[i].shape.getGlobalBounds().intersects(enemies[j].shape.getGlobalBounds()))
+                {
+                    if(enemies[i].take_edamage(rand()%3 +1))
+                        enemies.erase(enemies.begin() + j);
+                    else
+                        enemies[i].take_edamage(rand()%3 + 1) - 1;  //enemy take damage
+
+                    pl.bullets.erase(pl.bullets.begin() + i);
+                    break;
+                }
+            }
+        }
+
+        //update enemies
+        for(size_t i =0; i<enemies.size(); i++)
+        {
+            enemies[i].shape.move(-8.f, 0);
+
+            if(enemies[i].shape.getPosition().y <= 0 - enemies[i].shape.getGlobalBounds().width)
+            {
+                enemies.erase(enemies.begin() + i);
+                break;
+            }
+            if(enemies[i].shape.getGlobalBounds().intersects(pl.shape.getGlobalBounds()))
+            {
+                enemies.erase(enemies.begin() + i);
+                break;
+
+            }
+
+        }
+
+        if(enemy_time < 100)
+            enemy_time++;
+
+        if(enemy_time >= 100)
+        {
+            enemies.push_back(Enemy(&enemytext,window.getSize()));
+            enemy_time = 0;
+        }
+
+        //draw
+        window.clear();
+
+        //Bullets
+        window.draw(pl.shape);
+        for(size_t i=0; i<pl.bullets.size(); i++)
+        {
+            window.draw(pl.bullets[i].shape);
+        }
+
+        //Enemy
+        for(size_t i =0; i<enemies.size(); i++)
+        {
+            window.draw(enemies[i].shape);
+        }
         window.display();
-
-
     }
 
 
     return 0;
 }
+
