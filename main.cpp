@@ -20,7 +20,7 @@ public:
     Shoot(Texture *text, Vector2f windowSize);
 
 };
-
+////////////////////////////////////////////////////////////////////////
 
 class Player
 {
@@ -31,13 +31,13 @@ private:
 public:
     Sprite shape;
     Texture *text;
-    int take_damage();
-
+    int take_pdamage(int *);
+    int show_phmax(int *);
     Player(Texture *);
     vector<Shoot> bullets;
-    //~Player();
 
 };
+////////////////////////////////////////////////////////////////////////
 
 class Enemy
 {
@@ -48,11 +48,11 @@ private:
 public:
     Sprite shape;
     Enemy(Texture *texture,Vector2u pos);
-    int take_edamage( int a);
-    Enemy();
+    int take_edamage(int *);
+    int show_Ephmaxe(int );
 
 };
-
+////////////////////////////////////////////////////////////////////////////
 
 
 Player::Player(Texture *tex)
@@ -62,10 +62,24 @@ Player::Player(Texture *tex)
     this->text = tex;
     this-> shape.setTexture(*tex);
     this->shape.setScale(0.2f,0.2f);
+    take_pdamage(&HP);
+    show_phmax(&HPmax);
 
 }
 
+int Player::take_pdamage(int *H)
+{
+    *H = HP;
+    --HP;
+    return HP;
+}
 
+int Player::show_phmax(int *HM)
+{
+    *HM = HPmax;
+    return HPmax;
+}
+/////////////////////////////////////////////////////////////////////////////
 
 Shoot::Shoot(Texture *tex, Vector2f poss)
 {
@@ -76,22 +90,31 @@ Shoot::Shoot(Texture *tex, Vector2f poss)
 
 Enemy::Enemy(Texture *text, Vector2u windowSize)
 {
-    this->HPmax = rand() % 3 + 1;
+    this->HPmax = 2;
     this->HP = this->HPmax;
 
     this->shape.setTexture(*text);
     this->shape.setScale(0.25f, 0.25f);
     this->shape.setPosition(windowSize.x - this->shape.getGlobalBounds().width, rand() % (int)(windowSize.y - this->shape.getLocalBounds().height));
-    take_edamage(HP);
+    take_edamage(&HP);
+    //show_Ephmaxe(HPmax);
 }
 
-int Enemy::take_edamage(int a)
+
+int Enemy::take_edamage(int *a)
 {
-
-    a = HP;
-    a--;
-    return a;
+    *a = HP;
+    HP--;
+    return HP;
 }
+
+
+int Enemy::show_Ephmaxe(int sh)
+{
+    sh = HPmax;
+    return sh;
+}
+////////////////////////////////////////////////////////////////////////////////////
 
 
 
@@ -101,11 +124,12 @@ int main(int argc, char *argv[])
 
     RenderWindow window(VideoMode(1080,800),"Spaceship Game!", Style::Default);
     window.setFramerateLimit(60);
+    int count = 10;
 
 
     //init text
     Font font;
-    font.loadFromFile("C:/Users/king/Music/Qt/5/5/B-NAZANIN.TTF");
+    font.loadFromFile("C:/Users/king/Music/Qt/5/5/Unisono-Quickpath-free.otf");
 
     //init picture
     Texture playertext;
@@ -117,6 +141,22 @@ int main(int argc, char *argv[])
     Texture shoottext;
     shoottext.loadFromFile("C:/Users/king/Music/Qt/5/5/image/misslie.png");
 
+    //score init
+    Text score;
+    score.setFont(font);
+    score.setCharacterSize(25);
+    score.setFillColor(Color::White);
+    score.setPosition(10.f, 10.f);
+
+    //gameOver
+    Text gameOver;
+    gameOver.setFont(font);
+    gameOver.setCharacterSize(35);
+    gameOver.setFillColor(Color::Red);
+    gameOver.setPosition(220.f, window.getSize().y / 2);
+    gameOver.setString("Game Over!!");
+
+
     //inti palyer
     Player pl(&playertext);
     int shoot_time = 15;
@@ -124,6 +164,7 @@ int main(int argc, char *argv[])
     hptext.setFont(font);
     hptext.setCharacterSize(14);
     hptext.setFillColor(Color::White);
+    int score_int = 0;
 
 
     //enemy init
@@ -147,106 +188,124 @@ int main(int argc, char *argv[])
                 window.close();
         }
 
+        if(count > 1)
+        {
+            //player update
+            if(Keyboard::isKeyPressed(Keyboard::W))
+                    pl.shape.move(0.f, -7.f);
+            if(Keyboard::isKeyPressed(Keyboard::A))
+                    pl.shape.move(-7.f, 0.f);
+            if(Keyboard::isKeyPressed(Keyboard::S))
+                    pl.shape.move(0.f, 7.f);
+            if(Keyboard::isKeyPressed(Keyboard::D))
+                    pl.shape.move(7.f, 0.f);
 
-        //player update
-        if(Keyboard::isKeyPressed(Keyboard::W))
-                pl.shape.move(0.f, -10.f);
-        if(Keyboard::isKeyPressed(Keyboard::A))
-                pl.shape.move(-10.f, 0.f);
-        if(Keyboard::isKeyPressed(Keyboard::S))
-                pl.shape.move(0.f, 10.f);
-        if(Keyboard::isKeyPressed(Keyboard::D))
-                pl.shape.move(10.f, 0.f);
+            hptext.setPosition(pl.shape.getPosition().x, pl.shape.getPosition().y - hptext.getGlobalBounds().height);
 
-        hptext.setPosition(pl.shape.getPosition().x, pl.shape.getPosition().y - hptext.getGlobalBounds().height);
-        //hptext.setString(to_string(pl.HP))
-        //collision with window
-        if(pl.shape.getPosition().x <= 0)   //left
-        {
-            pl.shape.setPosition(0.f, pl.shape.getPosition().y);
-        }
-        if(pl.shape.getPosition().x >= window.getSize().x - pl.shape.getGlobalBounds().width)    //right
-        {
-            pl.shape.setPosition( window.getSize().x - pl.shape.getGlobalBounds().width, pl.shape.getPosition().y);
-        }
-        if(pl.shape.getPosition().y <=0)    //top
-        {
-            pl.shape.setPosition(pl.shape.getPosition().x, 0.f);
-        }
-        if(pl.shape.getPosition().y >= window.getSize().y - pl.shape.getGlobalBounds().height)   //bottom
-        {
-            pl.shape.setPosition(pl.shape.getPosition().x, window.getSize().y - pl.shape.getGlobalBounds().height);
-        }
-
-
-        //update contorol
-        if(shoot_time < 15)
-        {
-            shoot_time++;
-        }
-
-        if(Mouse::isButtonPressed(Mouse::Left) && shoot_time >= 15)     //shooting
-        {
-            pl.bullets.push_back(Shoot(&shoottext, pl.shape.getPosition()));
-            shoot_time = 0;
-        }
-
-        //bullets
-        for(size_t i=0; i<pl.bullets.size(); i++)
-        {
-            //move bullets
-            pl.bullets[i].shape.move(20.f, 0.f);
-            //out of window
-            if(pl.bullets[i].shape.getPosition().x > window.getSize().x)
+            //collision with window
+            if(pl.shape.getPosition().x <= 0)   //left
             {
-                pl.bullets.erase(pl.bullets.begin() + i);
-                break;
+                pl.shape.setPosition(0.f, pl.shape.getPosition().y);
             }
-            //enemy collision
-            for(size_t j =0; j< enemies.size(); j++)
+            if(pl.shape.getPosition().x >= window.getSize().x - pl.shape.getGlobalBounds().width)    //right
             {
-                if(pl.bullets[i].shape.getGlobalBounds().intersects(enemies[j].shape.getGlobalBounds()))
-                {
-                    if(enemies[i].take_edamage(rand()%3 +1))
-                        enemies.erase(enemies.begin() + j);
-                    else
-                        enemies[i].take_edamage(rand()%3 + 1) - 1;  //enemy take damage
+                pl.shape.setPosition( window.getSize().x - pl.shape.getGlobalBounds().width, pl.shape.getPosition().y);
+            }
+            if(pl.shape.getPosition().y <=0)    //top
+            {
+                pl.shape.setPosition(pl.shape.getPosition().x, 0.f);
+            }
+            if(pl.shape.getPosition().y >= window.getSize().y - pl.shape.getGlobalBounds().height)   //bottom
+            {
+                pl.shape.setPosition(pl.shape.getPosition().x, window.getSize().y - pl.shape.getGlobalBounds().height);
+            }
 
+            //draw score
+            score.setString("Score: " + to_string(score_int));
+
+            //update contorol
+            if(shoot_time < 15)
+            {
+                shoot_time++;
+            }
+
+            if(Mouse::isButtonPressed(Mouse::Left) && shoot_time >= 15)     //shooting
+            {
+                pl.bullets.push_back(Shoot(&shoottext, pl.shape.getPosition()));
+                shoot_time = 0;
+            }
+
+            //bullets
+            for(size_t i=0; i<pl.bullets.size(); i++)
+            {
+                //move bullets
+                pl.bullets[i].shape.move(20.f, 0.f);
+                //out of window
+                if(pl.bullets[i].shape.getPosition().x > window.getSize().x)
+                {
                     pl.bullets.erase(pl.bullets.begin() + i);
                     break;
                 }
+                //enemy collision
+                for(size_t j =0; j< enemies.size(); j++)
+                {
+                    if(pl.bullets[i].shape.getGlobalBounds().intersects(enemies[j].shape.getGlobalBounds()))
+                    {
+                        int damage = 2;
+                        if(enemies[j].take_edamage(&damage))
+                        {
+                            enemies.erase(enemies.begin() + j);
+                            score_int++;
+                        }
+                        /*
+                        else
+
+                        {
+                            damage--;
+                            enemies[j].take_edamage(&damage);  //enemy take damage
+                        }
+                        */
+
+                        pl.bullets.erase(pl.bullets.begin() + i);
+                        break;
+                    }
+                }
             }
-        }
 
-        //update enemies
-        for(size_t i =0; i<enemies.size(); i++)
-        {
-            enemies[i].shape.move(-8.f, 0);
-
-            if(enemies[i].shape.getPosition().y <= 0 - enemies[i].shape.getGlobalBounds().width)
+            //update enemies
+            for(size_t i =0; i<enemies.size(); i++)
             {
-                enemies.erase(enemies.begin() + i);
-                break;
+                enemies[i].shape.move(-6.f, 0);
+
+                if(enemies[i].shape.getPosition().y <= 0 - enemies[i].shape.getGlobalBounds().width)
+                {
+                    enemies.erase(enemies.begin() + i);
+                    break;
+                }
+                if(enemies[i].shape.getGlobalBounds().intersects(pl.shape.getGlobalBounds()))
+                {
+
+                    int Heal = 10;
+                    hptext.setString(to_string(pl.take_pdamage(&Heal)) + "/" + to_string(pl.show_phmax(&Heal)));
+                    enemies.erase(enemies.begin() + i);
+                    count--;
+                    break;
+
+                }
+
             }
-            if(enemies[i].shape.getGlobalBounds().intersects(pl.shape.getGlobalBounds()))
+
+            if(enemy_time < 100)
+                enemy_time++;
+
+            if(enemy_time >= 100)
             {
-                enemies.erase(enemies.begin() + i);
-                break;
-
+                enemies.push_back(Enemy(&enemytext,window.getSize()));
+                enemy_time = 0;
             }
-
         }
 
-        if(enemy_time < 100)
-            enemy_time++;
-
-        if(enemy_time >= 100)
-        {
-            enemies.push_back(Enemy(&enemytext,window.getSize()));
-            enemy_time = 0;
-        }
-
-        //draw
+        //draw ===================================================== draw
         window.clear();
 
         //Bullets
@@ -259,8 +318,18 @@ int main(int argc, char *argv[])
         //Enemy
         for(size_t i =0; i<enemies.size(); i++)
         {
+            //ehptext.setString(to_string(enemies[i].show_Ephmaxe(i)) + "/" + to_string(enemies[i].take_edamage(0)));
+            //ehptext.setPosition(enemies[i].shape.getPosition().x, enemies[i].shape.getPosition().y - ehptext.getGlobalBounds().height);
+            //window.draw(ehptext);
             window.draw(enemies[i].shape);
         }
+
+        //UI
+        window.draw(hptext);
+        window.draw(score);
+        if(count <= 1)
+            window.draw(gameOver);
+
         window.display();
     }
 
