@@ -84,11 +84,12 @@ private:
 
 public:
     Sprite shape;
-    Enemy(Texture *texture,Vector2u pos);
+    Enemy(Texture *texture, Vector2u pos);
     int Take_Edamage(int *) override;
     int Show_Edamage(int ) override;
 
 };
+
 /////////////////////////////////////////////////////////////////////////////
 ///definition The strong_Enemy class
 ///
@@ -100,7 +101,7 @@ private:
 
 public:
     Sprite shape;
-    Strong_Enemy(Texture *, Vector2u);
+    Strong_Enemy(Texture *t, Vector2u s);
     int Take_Edamage(int *) override;
     int Show_Edamage(int ) override;
 
@@ -161,7 +162,6 @@ int Enemy::Take_Edamage(int *a)
     return HP;
 }
 
-
 int Enemy::Show_Edamage(int sh)
 {
     sh = HPmax;
@@ -169,24 +169,39 @@ int Enemy::Show_Edamage(int sh)
 }
 ////////////////////////////////////////////////////////////////////////////////////
 
-/*
+
 Strong_Enemy::Strong_Enemy(Texture *texture, Vector2u size)
 {
-    this->strong_HPmax = 3;
-    this-> strong_HP = this->strong_HPmax;
+    strong_HPmax = 3;
+    strong_HP = strong_HPmax;
 
-    shape.setTexture(*texture);
-    shape.setScale(0.22f, 0.22f);
-    shape.setPosition(size.x - this->shape.getGlobalBounds().width, rand() % (int)(size.y - this->shape.getLocalBounds().height));
+    this->shape.setTexture(*texture);
+    this->shape.setScale(0.22f, 0.22f);
+    this->shape.setPosition(size.x - this->shape.getGlobalBounds().width, rand() % (int)(size.y - this->shape.getLocalBounds().height));
     Take_Edamage(&strong_HP);
     Show_Edamage(strong_HPmax);
 
+}
+
+int Strong_Enemy::Take_Edamage(int *h)
+{
+    *h = strong_HP;
+    strong_HP--;
+    return strong_HP;
 
 }
-*/
+
+int Strong_Enemy::Show_Edamage(int a)
+{
+    a = strong_HPmax;
+    return a;
+}
 
 
 
+
+
+//////////////////////////////////////////main program
 int main(int argc, char *argv[])
 {
     srand(time(NULL));
@@ -203,10 +218,15 @@ int main(int argc, char *argv[])
     /////////init picture
     Texture playertext;
     playertext.loadFromFile("C:/Users/king/Music/Qt/5/5/image/spship.png");
-
+    /////////inti first enemy image
     Texture enemytext;
     enemytext.loadFromFile("C:/Users/king/Music/Qt/5/5/image/enemy.png");
 
+    ////////init strong enemy image
+    Texture strong_enemytext;
+    strong_enemytext.loadFromFile("C:/Users/king/Music/Qt/5/5/image/enemy_strong.png");
+
+    ////////init bullets image
     Texture shoottext;
     shoottext.loadFromFile("C:/Users/king/Music/Qt/5/5/image/misslie.png");
 
@@ -244,6 +264,12 @@ int main(int argc, char *argv[])
     ehptext.setFont(font);
     ehptext.setCharacterSize(14);
     ehptext.setFillColor(Color::White);
+
+    /////////////strong enemy inti
+    vector<Strong_Enemy> str_enemies;
+    int strong_time = 0;
+    str_enemies.push_back(Strong_Enemy(&strong_enemytext, window.getSize()));
+
 
     ///////////while loop game
     while (window.isOpen())
@@ -293,12 +319,12 @@ int main(int argc, char *argv[])
             score.setString("Score: " + to_string(score_int));
 
             //update contorol
-            if(shoot_time < 15)
+            if(shoot_time < 20)
             {
                 shoot_time++;
             }
 
-            if(Mouse::isButtonPressed(Mouse::Left) && shoot_time >= 15)     //shooting
+            if(Mouse::isButtonPressed(Mouse::Left) && shoot_time >= 20)     //shooting
             {
                 pl.bullets.push_back(Shoot(&shoottext, pl.shape.getPosition()));
                 shoot_time = 0;
@@ -309,12 +335,14 @@ int main(int argc, char *argv[])
             {
                 //move bullets
                 pl.bullets[i].shape.move(20.f, 0.f);
+
                 //out of window
                 if(pl.bullets[i].shape.getPosition().x > window.getSize().x)
                 {
                     pl.bullets.erase(pl.bullets.begin() + i);
                     break;
                 }
+
                 //enemy collision
                 for(size_t j =0; j< enemies.size(); j++)
                 {
@@ -340,12 +368,34 @@ int main(int argc, char *argv[])
                         break;
                     }
                 }
+
+                //Strong enemy colision
+                for(size_t k=0; k < str_enemies.size(); k++)
+                {
+                    if(pl.bullets[i].shape.getGlobalBounds().intersects(str_enemies[k].shape.getGlobalBounds()))
+                    {
+
+                        int s_damage = 3;
+                        if(str_enemies[k].Take_Edamage(&s_damage))
+                        {
+                            str_enemies.erase(str_enemies.begin() + k);
+                            score_int++;
+                        }
+
+                        pl.bullets.erase(pl.bullets.begin() + i);
+                        break;
+                    }
+                }
+
+
             }
 
             //update enemies
             for(size_t i =0; i<enemies.size(); i++)
             {
                 enemies[i].shape.move(-6.f, 0);
+
+                //str_enemies[i].shape.move(-7.f, 0);
 
                 if(enemies[i].shape.getPosition().y <= 0 - enemies[i].shape.getGlobalBounds().width)
                 {
@@ -362,16 +412,48 @@ int main(int argc, char *argv[])
                     break;
 
                 }
+            }
+
+            for(size_t i =0; i<str_enemies.size(); i++)
+            {
+
+                str_enemies[i].shape.move(-7.f, 0);
+
+                if(str_enemies[i].shape.getPosition().y <= 0 - str_enemies[i].shape.getGlobalBounds().width)
+                {
+                    str_enemies.erase(str_enemies.begin() + i);
+                    //break;
+                }
+
+                if(str_enemies[i].shape.getGlobalBounds().intersects(pl.shape.getGlobalBounds()))
+                {
+
+                    //int Heal = 10;
+                    //hptext.setString(to_string(pl.Take_Pdamage(&Heal)) + "/" + to_string(pl.Show_Pdamage(&Heal)));
+                    str_enemies.erase(str_enemies.begin() + i);
+                    //count--;
+                    break;
+                }
 
             }
 
-            if(enemy_time < 100)
+
+            if(enemy_time < 60)
                 enemy_time++;
 
-            if(enemy_time >= 100)
+            if(enemy_time >= 60)
             {
                 enemies.push_back(Enemy(&enemytext,window.getSize()));
                 enemy_time = 0;
+            }
+
+            if(strong_time < 150)
+                strong_time++;
+
+            if(strong_time >= 150)
+            {
+                str_enemies.push_back(Strong_Enemy(&strong_enemytext, window.getSize()));
+                strong_time = 0;
             }
         }
 
@@ -393,6 +475,12 @@ int main(int argc, char *argv[])
             ehptext.setPosition(enemies[i].shape.getPosition().x, enemies[i].shape.getPosition().y - ehptext.getGlobalBounds().height);
             window.draw(ehptext);
             window.draw(enemies[i].shape);
+        }
+
+        //Strong enemy
+        for(size_t j = 0; j<str_enemies.size(); j++)
+        {
+            window.draw(str_enemies[j].shape);
         }
 
         //UI
