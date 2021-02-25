@@ -12,6 +12,33 @@ using namespace std;
 
 
 
+
+
+class F_Player
+{
+public:
+    F_Player();
+    virtual int Take_Pdamage() = 0;
+    virtual int Show_Pdamage() = 0;
+
+};
+
+////////////////////////////////////////////////////////////////////////
+class F_Enemy
+{
+public:
+    F_Enemy();
+    virtual int Take_Edamage(int *) = 0;
+    virtual int Show_Edamage(int )  = 0;
+
+};
+
+F_Enemy::F_Enemy()
+{
+
+}
+
+////////////////////////////////////////////////////////////////////////
 class Shoot
 {
 public:
@@ -37,9 +64,9 @@ public:
     vector<Shoot> bullets;
 
 };
-////////////////////////////////////////////////////////////////////////
+/////////////////////////////////////////////////////////////////////////
 
-class Enemy
+class Enemy : public F_Enemy
 {
 private:
     int HP;
@@ -48,11 +75,11 @@ private:
 public:
     Sprite shape;
     Enemy(Texture *texture,Vector2u pos);
-    int take_edamage(int *);
-    int show_Ephmaxe(int );
+    int Take_Edamage(int *) override;
+    int Show_Edamage(int ) override;
 
 };
-////////////////////////////////////////////////////////////////////////////
+/////////////////////////////////////////////////////////////////////////////
 
 
 Player::Player(Texture *tex)
@@ -61,7 +88,7 @@ Player::Player(Texture *tex)
     this->HPmax = HP;
     this->text = tex;
     this-> shape.setTexture(*tex);
-    this->shape.setScale(0.2f,0.2f);
+    this->shape.setScale(0.22f,0.22f);
     take_pdamage(&HP);
     show_phmax(&HPmax);
 
@@ -79,7 +106,7 @@ int Player::show_phmax(int *HM)
     *HM = HPmax;
     return HPmax;
 }
-/////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////
 
 Shoot::Shoot(Texture *tex, Vector2f poss)
 {
@@ -87,6 +114,7 @@ Shoot::Shoot(Texture *tex, Vector2f poss)
     this->shape.setScale(0.06f,0.06f);
     this->shape.setPosition(poss);
 }
+///////////////////////////////////////////////////////////////////////////////
 
 Enemy::Enemy(Texture *text, Vector2u windowSize)
 {
@@ -96,12 +124,12 @@ Enemy::Enemy(Texture *text, Vector2u windowSize)
     this->shape.setTexture(*text);
     this->shape.setScale(0.25f, 0.25f);
     this->shape.setPosition(windowSize.x - this->shape.getGlobalBounds().width, rand() % (int)(windowSize.y - this->shape.getLocalBounds().height));
-    take_edamage(&HP);
-    //show_Ephmaxe(HPmax);
+    Take_Edamage(&HP);
+    //Show_Edamage(HPmax);
 }
 
 
-int Enemy::take_edamage(int *a)
+int Enemy::Take_Edamage(int *a)
 {
     *a = HP;
     HP--;
@@ -109,7 +137,7 @@ int Enemy::take_edamage(int *a)
 }
 
 
-int Enemy::show_Ephmaxe(int sh)
+int Enemy::Show_Edamage(int sh)
 {
     sh = HPmax;
     return sh;
@@ -127,11 +155,11 @@ int main(int argc, char *argv[])
     int count = 10;
 
 
-    //init text
+    /////////init text
     Font font;
     font.loadFromFile("C:/Users/king/Music/Qt/5/5/Unisono-Quickpath-free.otf");
 
-    //init picture
+    /////////init picture
     Texture playertext;
     playertext.loadFromFile("C:/Users/king/Music/Qt/5/5/image/spship.png");
 
@@ -141,14 +169,14 @@ int main(int argc, char *argv[])
     Texture shoottext;
     shoottext.loadFromFile("C:/Users/king/Music/Qt/5/5/image/misslie.png");
 
-    //score init
+    //////////score init
     Text score;
     score.setFont(font);
     score.setCharacterSize(25);
     score.setFillColor(Color::White);
     score.setPosition(10.f, 10.f);
 
-    //gameOver
+    //////////Game Over
     Text gameOver;
     gameOver.setFont(font);
     gameOver.setCharacterSize(35);
@@ -157,7 +185,7 @@ int main(int argc, char *argv[])
     gameOver.setString("Game Over!!");
 
 
-    //inti palyer
+    ///////////inti palyer
     Player pl(&playertext);
     int shoot_time = 15;
     Text hptext;
@@ -167,7 +195,7 @@ int main(int argc, char *argv[])
     int score_int = 0;
 
 
-    //enemy init
+    ////////////enemy init
     vector<Enemy> enemies;
     int enemy_time = 0;
     enemies.push_back(Enemy(&enemytext,window.getSize()));
@@ -176,7 +204,7 @@ int main(int argc, char *argv[])
     ehptext.setCharacterSize(14);
     ehptext.setFillColor(Color::White);
 
-
+    ///////////while loop game
     while (window.isOpen())
     {
         Event event;
@@ -251,8 +279,9 @@ int main(int argc, char *argv[])
                 {
                     if(pl.bullets[i].shape.getGlobalBounds().intersects(enemies[j].shape.getGlobalBounds()))
                     {
+
                         int damage = 2;
-                        if(enemies[j].take_edamage(&damage))
+                        if(enemies[j].Take_Edamage(&damage))
                         {
                             enemies.erase(enemies.begin() + j);
                             score_int++;
@@ -318,7 +347,8 @@ int main(int argc, char *argv[])
         //Enemy
         for(size_t i =0; i<enemies.size(); i++)
         {
-            //ehptext.setString(to_string(enemies[i].show_Ephmaxe(i)) + "/" + to_string(enemies[i].take_edamage(0)));
+            int weak_enemy = 2;
+            //ehptext.setString(to_string(enemies[i].Show_Edamage(weak_enemy)));
             //ehptext.setPosition(enemies[i].shape.getPosition().x, enemies[i].shape.getPosition().y - ehptext.getGlobalBounds().height);
             //window.draw(ehptext);
             window.draw(enemies[i].shape);
@@ -327,6 +357,7 @@ int main(int argc, char *argv[])
         //UI
         window.draw(hptext);
         window.draw(score);
+
         if(count <= 1)
             window.draw(gameOver);
 
