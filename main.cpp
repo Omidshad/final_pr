@@ -13,7 +13,9 @@ using namespace std;
 
 
 
-
+///////////////////////////////////////////////////////////////////////
+/// Definition The F_Player class
+///
 class F_Player
 {
 public:
@@ -24,6 +26,8 @@ public:
 };
 
 ////////////////////////////////////////////////////////////////////////
+/// Definition The F_Enemy class
+///
 class F_Enemy
 {
 public:
@@ -39,6 +43,8 @@ F_Enemy::F_Enemy()
 }
 
 ////////////////////////////////////////////////////////////////////////
+/// Definition The Shoot class
+///
 class Shoot
 {
 public:
@@ -48,6 +54,8 @@ public:
 
 };
 ////////////////////////////////////////////////////////////////////////
+/// Definition The Player class
+///
 
 class Player
 {
@@ -58,13 +66,15 @@ private:
 public:
     Sprite shape;
     Texture *text;
-    int take_pdamage(int *);
-    int show_phmax(int *);
+    int Take_Pdamage(int *);
+    int Show_Pdamage(int *);
     Player(Texture *);
     vector<Shoot> bullets;
 
 };
 /////////////////////////////////////////////////////////////////////////
+/// Definition Enemy class
+///
 
 class Enemy : public F_Enemy
 {
@@ -80,8 +90,23 @@ public:
 
 };
 /////////////////////////////////////////////////////////////////////////////
+///definition The strong_Enemy class
+///
+class Strong_Enemy : public F_Enemy
+{
+private:
+    int strong_HP;
+    int strong_HPmax;
 
+public:
+    Sprite shape;
+    Strong_Enemy(Texture *, Vector2u);
+    int Take_Edamage(int *) override;
+    int Show_Edamage(int ) override;
 
+};
+
+////////////////////////////////////////////////////////////////////////////
 Player::Player(Texture *tex)
 {
     this->HP = 10;
@@ -89,19 +114,19 @@ Player::Player(Texture *tex)
     this->text = tex;
     this-> shape.setTexture(*tex);
     this->shape.setScale(0.22f,0.22f);
-    take_pdamage(&HP);
-    show_phmax(&HPmax);
+    Take_Pdamage(&HP);
+    Show_Pdamage(&HPmax);
 
 }
 
-int Player::take_pdamage(int *H)
+int Player::Take_Pdamage(int *H)
 {
     *H = HP;
     --HP;
     return HP;
 }
 
-int Player::show_phmax(int *HM)
+int Player::Show_Pdamage(int *HM)
 {
     *HM = HPmax;
     return HPmax;
@@ -125,7 +150,7 @@ Enemy::Enemy(Texture *text, Vector2u windowSize)
     this->shape.setScale(0.25f, 0.25f);
     this->shape.setPosition(windowSize.x - this->shape.getGlobalBounds().width, rand() % (int)(windowSize.y - this->shape.getLocalBounds().height));
     Take_Edamage(&HP);
-    //Show_Edamage(HPmax);
+    Show_Edamage(HPmax);
 }
 
 
@@ -143,6 +168,22 @@ int Enemy::Show_Edamage(int sh)
     return sh;
 }
 ////////////////////////////////////////////////////////////////////////////////////
+
+/*
+Strong_Enemy::Strong_Enemy(Texture *texture, Vector2u size)
+{
+    this->strong_HPmax = 3;
+    this-> strong_HP = this->strong_HPmax;
+
+    shape.setTexture(*texture);
+    shape.setScale(0.22f, 0.22f);
+    shape.setPosition(size.x - this->shape.getGlobalBounds().width, rand() % (int)(size.y - this->shape.getLocalBounds().height));
+    Take_Edamage(&strong_HP);
+    Show_Edamage(strong_HPmax);
+
+
+}
+*/
 
 
 
@@ -286,12 +327,12 @@ int main(int argc, char *argv[])
                             enemies.erase(enemies.begin() + j);
                             score_int++;
                         }
-                        /*
-                        else
 
+                        else
+                        /*
                         {
                             damage--;
-                            enemies[j].take_edamage(&damage);  //enemy take damage
+                            enemies[j].Take_Edamage(&damage);  //enemy take damage
                         }
                         */
 
@@ -315,7 +356,7 @@ int main(int argc, char *argv[])
                 {
 
                     int Heal = 10;
-                    hptext.setString(to_string(pl.take_pdamage(&Heal)) + "/" + to_string(pl.show_phmax(&Heal)));
+                    hptext.setString(to_string(pl.Take_Pdamage(&Heal)) + "/" + to_string(pl.Show_Pdamage(&Heal)));
                     enemies.erase(enemies.begin() + i);
                     count--;
                     break;
@@ -348,9 +389,9 @@ int main(int argc, char *argv[])
         for(size_t i =0; i<enemies.size(); i++)
         {
             int weak_enemy = 2;
-            //ehptext.setString(to_string(enemies[i].Show_Edamage(weak_enemy)));
-            //ehptext.setPosition(enemies[i].shape.getPosition().x, enemies[i].shape.getPosition().y - ehptext.getGlobalBounds().height);
-            //window.draw(ehptext);
+            ehptext.setString(to_string(enemies[i].Show_Edamage(weak_enemy)));
+            ehptext.setPosition(enemies[i].shape.getPosition().x, enemies[i].shape.getPosition().y - ehptext.getGlobalBounds().height);
+            window.draw(ehptext);
             window.draw(enemies[i].shape);
         }
 
