@@ -22,9 +22,14 @@ public:
     F_Player();
     virtual int Take_Pdamage() = 0;
     virtual int Show_Pdamage() = 0;
+    virtual int Take_Strong_dm() = 0;
 
 };
 
+F_Player::F_Player()
+{
+
+}
 ////////////////////////////////////////////////////////////////////////
 /// Definition The F_Enemy class
 ///
@@ -57,7 +62,7 @@ public:
 /// Definition The Player class
 ///
 
-class Player
+class Player : public F_Player
 {
 private:
     int HP;
@@ -66,9 +71,10 @@ private:
 public:
     Sprite shape;
     Texture *text;
-    int Take_Pdamage(int *);
-    int Show_Pdamage(int *);
-    Player(Texture *);
+    int Take_Pdamage() override;
+    int Show_Pdamage() override;
+    int Take_Strong_dm() override;
+    Player(Texture *t);
     vector<Shoot> bullets;
 
 };
@@ -110,27 +116,36 @@ public:
 ////////////////////////////////////////////////////////////////////////////
 Player::Player(Texture *tex)
 {
-    this->HP = 10;
-    this->HPmax = HP;
+    HP = 10;
+    HPmax = HP;
+    HP +=3;
     this->text = tex;
     this-> shape.setTexture(*tex);
     this->shape.setScale(0.22f,0.22f);
-    Take_Pdamage(&HP);
-    Show_Pdamage(&HPmax);
+    Take_Strong_dm();
+    Take_Pdamage();
+    Show_Pdamage();
 
 }
 
-int Player::Take_Pdamage(int *H)
+int Player::Take_Pdamage()
 {
-    *H = HP;
-    --HP;
+    //*H = HP;
+    HP--;
     return HP;
 }
 
-int Player::Show_Pdamage(int *HM)
+int Player::Show_Pdamage()
 {
-    *HM = HPmax;
+    //*HM = HPmax;
     return HPmax;
+}
+
+int Player::Take_Strong_dm()
+{
+    //*HS = HP;
+    HP  -= 2 ;
+    return HP;
 }
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -172,11 +187,11 @@ int Enemy::Show_Edamage(int sh)
 
 Strong_Enemy::Strong_Enemy(Texture *texture, Vector2u size)
 {
-    strong_HPmax = 3;
-    strong_HP = strong_HPmax;
+    this->strong_HPmax = 1;
+    this->strong_HP = this->strong_HPmax;
 
     this->shape.setTexture(*texture);
-    this->shape.setScale(0.22f, 0.22f);
+    this->shape.setScale(0.19f, 0.19f);
     this->shape.setPosition(size.x - this->shape.getGlobalBounds().width, rand() % (int)(size.y - this->shape.getLocalBounds().height));
     Take_Edamage(&strong_HP);
     Show_Edamage(strong_HPmax);
@@ -283,7 +298,7 @@ int main(int argc, char *argv[])
                 window.close();
         }
 
-        if(count > 1)
+        if(count > 0)
         {
             //player update
             if(Keyboard::isKeyPressed(Keyboard::W))
@@ -319,12 +334,12 @@ int main(int argc, char *argv[])
             score.setString("Score: " + to_string(score_int));
 
             //update contorol
-            if(shoot_time < 20)
+            if(shoot_time < 10)
             {
                 shoot_time++;
             }
 
-            if(Mouse::isButtonPressed(Mouse::Left) && shoot_time >= 20)     //shooting
+            if(Mouse::isButtonPressed(Mouse::Left) && shoot_time >= 10)     //shooting
             {
                 pl.bullets.push_back(Shoot(&shoottext, pl.shape.getPosition()));
                 shoot_time = 0;
@@ -334,7 +349,7 @@ int main(int argc, char *argv[])
             for(size_t i=0; i<pl.bullets.size(); i++)
             {
                 //move bullets
-                pl.bullets[i].shape.move(20.f, 0.f);
+                pl.bullets[i].shape.move(18.f, 0.f);
 
                 //out of window
                 if(pl.bullets[i].shape.getPosition().x > window.getSize().x)
@@ -356,14 +371,6 @@ int main(int argc, char *argv[])
                             score_int++;
                         }
 
-                        else
-                        /*
-                        {
-                            damage--;
-                            enemies[j].Take_Edamage(&damage);  //enemy take damage
-                        }
-                        */
-
                         pl.bullets.erase(pl.bullets.begin() + i);
                         break;
                     }
@@ -375,11 +382,11 @@ int main(int argc, char *argv[])
                     if(pl.bullets[i].shape.getGlobalBounds().intersects(str_enemies[k].shape.getGlobalBounds()))
                     {
 
-                        int s_damage = 3;
+                        int s_damage = 1;
                         if(str_enemies[k].Take_Edamage(&s_damage))
                         {
                             str_enemies.erase(str_enemies.begin() + k);
-                            score_int++;
+                            score_int += 3;
                         }
 
                         pl.bullets.erase(pl.bullets.begin() + i);
@@ -395,7 +402,6 @@ int main(int argc, char *argv[])
             {
                 enemies[i].shape.move(-6.f, 0);
 
-                //str_enemies[i].shape.move(-7.f, 0);
 
                 if(enemies[i].shape.getPosition().y <= 0 - enemies[i].shape.getGlobalBounds().width)
                 {
@@ -405,8 +411,7 @@ int main(int argc, char *argv[])
                 if(enemies[i].shape.getGlobalBounds().intersects(pl.shape.getGlobalBounds()))
                 {
 
-                    int Heal = 10;
-                    hptext.setString(to_string(pl.Take_Pdamage(&Heal)) + "/" + to_string(pl.Show_Pdamage(&Heal)));
+                    hptext.setString(to_string(pl.Take_Pdamage()) + "/" + to_string(pl.Show_Pdamage()));
                     enemies.erase(enemies.begin() + i);
                     count--;
                     break;
@@ -422,26 +427,25 @@ int main(int argc, char *argv[])
                 if(str_enemies[i].shape.getPosition().y <= 0 - str_enemies[i].shape.getGlobalBounds().width)
                 {
                     str_enemies.erase(str_enemies.begin() + i);
-                    //break;
+                    break;
                 }
 
                 if(str_enemies[i].shape.getGlobalBounds().intersects(pl.shape.getGlobalBounds()))
                 {
 
-                    //int Heal = 10;
-                    //hptext.setString(to_string(pl.Take_Pdamage(&Heal)) + "/" + to_string(pl.Show_Pdamage(&Heal)));
+                    hptext.setString(to_string(pl.Take_Strong_dm()) + "/" + to_string(pl.Show_Pdamage()));
                     str_enemies.erase(str_enemies.begin() + i);
-                    //count--;
+                    count -= 2;
                     break;
                 }
 
             }
 
 
-            if(enemy_time < 60)
+            if(enemy_time < 55)
                 enemy_time++;
 
-            if(enemy_time >= 60)
+            if(enemy_time >= 55)
             {
                 enemies.push_back(Enemy(&enemytext,window.getSize()));
                 enemy_time = 0;
@@ -487,7 +491,7 @@ int main(int argc, char *argv[])
         window.draw(hptext);
         window.draw(score);
 
-        if(count <= 1)
+        if(count < 1)
             window.draw(gameOver);
 
         window.display();
